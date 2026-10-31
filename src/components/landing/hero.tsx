@@ -29,7 +29,7 @@ export function Hero() {
             subscriptions, invoices and payments from your own customer portal.
           </p>
           <div className="rise mt-9 flex flex-wrap items-center gap-3" style={{ '--d': '260ms' } as React.CSSProperties}>
-            <CtaLink href="#products" size="lg">
+            <CtaLink href="/products" size="lg">
               Explore Products
               <ArrowRight className="size-4" strokeWidth={2} aria-hidden />
             </CtaLink>

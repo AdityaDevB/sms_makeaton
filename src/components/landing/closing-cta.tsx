@@ -15,7 +15,7 @@ export function ClosingCta() {
               <CtaLink href="/signup" variant="light" size="lg">
                 Sign up
               </CtaLink>
-              <CtaLink href="#products" variant="outline-light" size="lg">
+              <CtaLink href="/products" variant="outline-light" size="lg">
                 Explore Products
               </CtaLink>
             </div>
