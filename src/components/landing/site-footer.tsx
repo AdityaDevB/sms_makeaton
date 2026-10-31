@@ -9,7 +9,10 @@ const columns = [
   { title: 'Navigate', links: navLinks },
   {
     title: 'Products',
-    links: [...products.map((product) => ({ label: product.name, href: '#products' })), { label: 'Pricing', href: '#pricing' }],
+    links: [
+      ...products.map((product) => ({ label: product.name, href: '/products' })),
+      { label: 'Pricing', href: '/#pricing' },
+    ],
   },
 ]
 
