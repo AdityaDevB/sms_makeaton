@@ -15,13 +15,14 @@ import { ClosingCta } from '@/components/landing/closing-cta'
 import { Container } from '@/components/landing/container'
 import { CtaLink } from '@/components/landing/cta-link'
 
+import prisma from '@/lib/prisma'
 import {
   YEARLY_DISCOUNT_PERCENT,
-  addons,
+  addons as fallbackAddons,
   formatPrice,
-  plans,
+  plans as fallbackPlans,
   pricePerMonth,
-  products,
+  products as fallbackProducts,
 } from '@/lib/catalog'
 
 export const metadata = {
@@ -34,7 +35,111 @@ const icons: Record<string, LucideIcon> = {
   teams: Users,
 }
 
-export default function ProductsPage() {
+export default async function ProductsPage() {
+  let products = fallbackProducts
+  let plans = fallbackPlans
+  let addons = fallbackAddons
+
+  try {
+    const [dbProducts, dbPlans, dbAddons] = await Promise.all([
+      prisma.product.findMany({
+        where: { isActive: true },
+        include: {
+          planProducts: {
+            include: {
+              plan: true,
+            },
+          },
+          variants: {
+            where: { isActive: true },
+          },
+        },
+        orderBy: { createdAt: 'asc' },
+      }),
+
+      prisma.plan.findMany({
+        where: { isActive: true },
+        include: {
+          planProducts: {
+            include: {
+              product: true,
+            },
+          },
+        },
+        orderBy: { price: 'asc' },
+      }),
+
+      prisma.addon.findMany({
+        where: { isActive: true },
+        orderBy: { price: 'asc' },
+      }),
+    ])
+
+    // Use database records only when the catalog has been seeded.
+    if (dbProducts.length > 0 && dbPlans.length > 0) {
+      products = dbProducts.map((product) => {
+        const catalogProduct = fallbackProducts.find(
+          (item) => item.slug === product.slug
+        )
+
+        return {
+          slug: product.slug,
+          name: product.name,
+          summary:
+            product.description ||
+            catalogProduct?.summary ||
+            '',
+          features: catalogProduct?.features || [],
+          variants: catalogProduct?.variants,
+        }
+      })
+
+      plans = dbPlans.map((plan) => {
+        const catalogPlan = fallbackPlans.find(
+          (item) => item.id === plan.id
+        )
+
+        return {
+          id: plan.id,
+          name: plan.name,
+          tagline:
+            plan.description ||
+            catalogPlan?.tagline ||
+            '',
+          monthly: Number(plan.price),
+          productSlugs: plan.planProducts.map(
+            (item) => item.product.slug
+          ),
+          includes: catalogPlan?.includes || [],
+          featured: catalogPlan?.featured,
+        }
+      })
+    }
+
+    if (dbAddons.length > 0) {
+      addons = dbAddons.map((addon) => {
+        const catalogAddon = fallbackAddons.find(
+          (item) => item.id === addon.slug
+        )
+
+        return {
+          id: addon.slug,
+          name: addon.name,
+          note:
+            addon.description ||
+            catalogAddon?.note ||
+            '',
+          monthly: Number(addon.price),
+        }
+      })
+    }
+  } catch (error) {
+    console.error(
+      'Could not load product catalogue from database. Using fallback catalog.',
+      error
+    )
+  }
+
   return (
     <>
       <SiteHeader />
@@ -58,7 +163,7 @@ export default function ProductsPage() {
 
             <div className="mt-10 flex flex-wrap gap-3">
               {products.map((product) => {
-                const Icon = icons[product.slug]
+                const Icon = icons[product.slug] || BookOpen
 
                 return (
                   <a
@@ -95,7 +200,7 @@ export default function ProductsPage() {
         <section className="py-16 md:py-24">
           <Container className="space-y-8">
             {products.map((product) => {
-              const Icon = icons[product.slug]
+              const Icon = icons[product.slug] || BookOpen
 
               const includedIn = plans.filter((plan) =>
                 plan.productSlugs.includes(product.slug)
@@ -187,7 +292,6 @@ export default function ProductsPage() {
                       ))}
                     </ul>
 
-                    {/* Subscribe redirects to subscription configuration */}
                     <CtaLink
                       href={`/subscribe?product=${product.slug}`}
                       size="lg"
