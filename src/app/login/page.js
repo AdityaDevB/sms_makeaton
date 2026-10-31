@@ -245,7 +245,7 @@ export default function LoginPage() {
                             </div>
 
                             <Link
-                                href="#"
+                                href="/forgot-password"
                                 className="text-sm font-medium text-[#315B91] hover:text-[#142B50] transition-colors"
                             >
                                 Forgot Password?
