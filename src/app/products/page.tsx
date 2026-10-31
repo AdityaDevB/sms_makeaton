@@ -117,7 +117,7 @@ export default function ProductsPage() {
                         </li>
                       ))}
                     </ul>
-                    <CtaLink href={`/signup?product=${product.slug}`} size="lg" className="mt-6 w-full">
+                    <CtaLink href={`/login?product=${product.slug}`} size="lg" className="mt-6 w-full">
                       Subscribe
                       <ArrowRight className="size-4" aria-hidden />
                     </CtaLink>

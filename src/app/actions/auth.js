@@ -3,6 +3,7 @@
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
+import { createSession } from '@/lib/session';
 const prisma = new PrismaClient();
 
 const loginSchema = z.object({
@@ -53,7 +54,7 @@ export async function authenticateUser(prevState, formData) {
 
 
         // 7. Role-based redirect path evaluation
-        let redirectPath = '/customer/dashboard';
+        let redirectPath = '/';
         if (user.role === 'ADMIN') redirectPath = '/admin/dashboard';
         else if (user.role === 'STAFF') redirectPath = '/staff/dashboard';
 

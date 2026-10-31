@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 import { authenticateUser } from '../actions/auth';
+import { useRouter } from 'next/navigation';
+
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
@@ -35,33 +37,46 @@ export default function LoginPage() {
         return Object.keys(newErrors).length === 0;
     };
 
+    const router = useRouter();
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const form = e.currentTarget;
+
         setIsLoading(true);
         setServerError('');
-        setErrors({});
+        setSuccess(false);
 
-        const formData = new FormData(e.currentTarget);
-        const email = formData.get('email').trim();
+        const formData = new FormData(form);
+
+        const email = formData.get('email');
         const password = formData.get('password');
-        formData.set('email', email); // Update with trimmed email
 
+        // Client-side validation
         if (!validateForm(email, password)) {
             setIsLoading(false);
             return;
         }
 
-        const response = await authenticateUser(null, formData);
+        try {
+            const response = await authenticateUser(null, formData);
 
-        if (response?.success) {
-            setSuccess(true);
-            // In production: router.push(response.redirect);
-            setTimeout(() => alert(`Redirecting to: ${response.redirect}`), 1000);
-        } else if (response?.errors) {
-            setErrors(response.errors);
-            setIsLoading(false);
-        } else {
-            setServerError(response?.message || "Authentication failed.");
+            if (response?.success) {
+                setSuccess(true);
+                router.push(response.redirect);
+            } else {
+                setServerError(
+                    response?.message ||
+                    response?.error ||
+                    'Login failed.'
+                );
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+
+            setServerError('Something went wrong. Please try again.');
+        } finally {
             setIsLoading(false);
         }
     };
