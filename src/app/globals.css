@@ -1,26 +1,245 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-canvas: #f5f7fb;
+  --color-surface: #ffffff;
+  --color-navy: #0a1a3f;
+  --color-navy-deep: #06112b;
+  --color-navy-soft: #142a63;
+  --color-ink: #0b1530;
+  --color-ink-soft: #55607a;
+  --color-line: #e1e6f0;
+  --color-line-strong: #c9d1e2;
+  --color-blue: #2b5bea;
+  --color-blue-deep: #1e45c2;
+  --color-sky: #38bdf8;
+  --color-success: #0e9f6e;
+  --color-amber: #d98a0b;
 }
 
 @theme inline {
-  --color-background: var(--background);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-2xl: 20px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  color-scheme: light;
+  --background: #f5f7fb;
+  --foreground: #0b1530;
+  --card: #ffffff;
+  --card-foreground: #0b1530;
+  --popover: #ffffff;
+  --popover-foreground: #0b1530;
+  --primary: #2b5bea;
+  --primary-foreground: #ffffff;
+  --secondary: #e1e6f0;
+  --secondary-foreground: #0b1530;
+  --muted: #e1e6f0;
+  --muted-foreground: #55607a;
+  --accent: #e1e6f0;
+  --accent-foreground: #0b1530;
+  --destructive: #b42318;
+  --border: #e1e6f0;
+  --input: #e1e6f0;
+  --ring: #2b5bea;
+  --radius: 0.625rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    line-height: 1.6;
+  }
+  ::selection {
+    background: #bcd0ff;
+    color: #0a1a3f;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-blue);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  .on-dark :focus-visible {
+    outline-color: var(--color-sky);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .display-1 {
+    font-size: clamp(2.5rem, 5.2vw, 4.3rem);
+    font-weight: 600;
+    line-height: 1.03;
+    letter-spacing: -0.042em;
+    text-wrap: balance;
+  }
+  .display-2 {
+    font-size: clamp(1.9rem, 3.4vw, 2.9rem);
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.034em;
+    text-wrap: balance;
+  }
+  .hero-bg {
+    background:
+      radial-gradient(55% 60% at 88% 0%, rgb(43 91 234 / 0.14), transparent 70%),
+      radial-gradient(40% 45% at 0% 35%, rgb(56 189 248 / 0.1), transparent 70%),
+      var(--color-canvas);
+  }
+  .grid-fade {
+    background-image:
+      linear-gradient(to right, rgb(10 26 63 / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(10 26 63 / 0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(70% 70% at 70% 20%, #000 0%, transparent 75%);
+  }
+  .navy-bg {
+    background:
+      radial-gradient(60% 80% at 100% 0%, rgb(43 91 234 / 0.35), transparent 65%),
+      radial-gradient(50% 70% at 0% 100%, rgb(56 189 248 / 0.12), transparent 65%),
+      var(--color-navy);
+  }
+  .link-slide {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0% 1px;
+    padding-bottom: 2px;
+    transition: background-size 0.25s ease, color 0.2s ease;
+  }
+  .link-slide:hover,
+  .link-slide:focus-visible {
+    background-size: 100% 1px;
+  }
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes menu-down {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes header-scrolled {
+  to {
+    background-color: rgb(255 255 255 / 0.92);
+    box-shadow: 0 10px 30px -22px rgb(10 26 63 / 0.35);
+  }
+}
+
+details[open] > .menu-panel {
+  animation: menu-down 0.2s ease-out;
+}
+
+@supports (animation-timeline: scroll()) {
+  .site-header {
+    animation: header-scrolled linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 90px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rise {
+    animation: fade-up 0.85s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: var(--d, 0ms);
+  }
+  .float {
+    animation: float 7s ease-in-out infinite;
+  }
+  .panel-in {
+    animation: panel-in 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .fade-up {
+      animation: fade-up linear both;
+      animation-timeline: view();
+      animation-range: entry 5% entry 45%;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  details[open] > .menu-panel {
+    animation: none;
+  }
 }
