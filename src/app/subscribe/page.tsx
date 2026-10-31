@@ -10,6 +10,8 @@ import {
   CreditCard,
   Info,
   Lock,
+  Save,
+  Trash2,
 } from 'lucide-react'
 
 import { SiteHeader } from '@/components/landing/site-header'
@@ -23,6 +25,22 @@ import {
   yearlyTotal,
   type Plan,
 } from '@/lib/catalog'
+
+const DRAFT_KEY = 'brightloop_checkout_draft'
+
+type CheckoutDraft = {
+  productSlug: string
+  productName: string
+  planId: string
+  planName: string
+  billingCycle: 'monthly' | 'yearly'
+  addonIds: string[]
+  variantPreference: string
+  monthlySubtotal: number
+  total: number
+  savings: number
+  savedAt: string
+}
 
 function SubscriptionContent() {
   const searchParams = useSearchParams()
@@ -39,6 +57,8 @@ function SubscriptionContent() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [selectedAddons, setSelectedAddons] = useState<string[]>([])
   const [variantPreference, setVariantPreference] = useState('')
+  const [savedDraft, setSavedDraft] = useState<CheckoutDraft | null>(null)
+  const [saveMessage, setSaveMessage] = useState('')
   const [confirmed, setConfirmed] = useState(false)
 
   useEffect(() => {
@@ -50,6 +70,30 @@ function SubscriptionContent() {
       )
     }
   }, [availablePlans])
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(DRAFT_KEY)
+      if (!stored) return
+
+      const draft = JSON.parse(stored) as CheckoutDraft
+      setSavedDraft(draft)
+
+      if (draft.productSlug === productSlug) {
+        if (availablePlans.some((plan) => plan.id === draft.planId)) {
+          setSelectedPlanId(draft.planId)
+        }
+
+        setBillingCycle(draft.billingCycle)
+        setSelectedAddons(draft.addonIds.filter((id) =>
+          addons.some((addon) => addon.id === id)
+        ))
+        setVariantPreference(draft.variantPreference || '')
+      }
+    } catch {
+      localStorage.removeItem(DRAFT_KEY)
+    }
+  }, [productSlug, availablePlans])
 
   const selectedPlan: Plan | undefined = availablePlans.find(
     (plan) => plan.id === selectedPlanId
@@ -85,6 +129,11 @@ function SubscriptionContent() {
       ? monthlySubtotal * 12 - total
       : 0
 
+  function resetConfirmation() {
+    setConfirmed(false)
+    setSaveMessage('')
+  }
+
   function toggleAddon(id: string) {
     if (!addonsAllowed) return
 
@@ -94,7 +143,49 @@ function SubscriptionContent() {
         : [...current, id]
     )
 
-    setConfirmed(false)
+    resetConfirmation()
+  }
+
+  function saveCheckoutDraft() {
+    if (!product || !selectedPlan) {
+      setSaveMessage('Please select a valid product and plan.')
+      return
+    }
+
+    const draft: CheckoutDraft = {
+      productSlug: product.slug,
+      productName: product.name,
+      planId: selectedPlan.id,
+      planName: selectedPlan.name,
+      billingCycle,
+      addonIds: selectedAddons,
+      variantPreference: variantPreference.trim(),
+      monthlySubtotal,
+      total,
+      savings,
+      savedAt: new Date().toISOString(),
+    }
+
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
+      setSavedDraft(draft)
+      setConfirmed(true)
+      setSaveMessage('Your checkout configuration has been saved in this browser.')
+    } catch {
+      setSaveMessage('Unable to save your draft. Please check your browser storage settings.')
+      setConfirmed(false)
+    }
+  }
+
+  function clearCheckoutDraft() {
+    try {
+      localStorage.removeItem(DRAFT_KEY)
+      setSavedDraft(null)
+      setConfirmed(false)
+      setSaveMessage('Saved checkout draft cleared.')
+    } catch {
+      setSaveMessage('Unable to clear the saved draft.')
+    }
   }
 
   if (!product) {
@@ -144,7 +235,6 @@ function SubscriptionContent() {
       <main className="min-h-screen overflow-hidden bg-[#F3F6FA]">
         <div className="mx-auto max-w-6xl px-6 py-10 md:py-14">
 
-          {/* Page heading */}
           <div className="subscribe-enter mb-10">
             <Link
               href="/products"
@@ -170,10 +260,8 @@ function SubscriptionContent() {
 
           <div className="grid items-start gap-8 lg:grid-cols-3">
 
-            {/* Configuration sections */}
             <div className="space-y-7 lg:col-span-2">
 
-              {/* Selected product */}
               <section className="subscribe-section rounded-2xl border border-gray-200 bg-white p-6">
                 <h2 className="text-lg font-bold text-[#142B50]">
                   Selected product
@@ -192,7 +280,6 @@ function SubscriptionContent() {
                 </div>
               </section>
 
-              {/* Plan selection */}
               <section className="subscribe-section rounded-2xl border border-gray-200 bg-white p-6">
                 <h2 className="text-lg font-bold text-[#142B50]">
                   Choose your plan
@@ -208,7 +295,7 @@ function SubscriptionContent() {
                         type="button"
                         onClick={() => {
                           setSelectedPlanId(plan.id)
-                          setConfirmed(false)
+                          resetConfirmation()
                         }}
                         className={`relative rounded-xl border-2 p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
                           selected
@@ -266,7 +353,6 @@ function SubscriptionContent() {
                 </div>
               </section>
 
-              {/* Billing cycle */}
               <section className="subscribe-section rounded-2xl border border-gray-200 bg-white p-6">
                 <h2 className="text-lg font-bold text-[#142B50]">
                   Billing cycle
@@ -282,7 +368,7 @@ function SubscriptionContent() {
                         type="button"
                         onClick={() => {
                           setBillingCycle(cycle)
-                          setConfirmed(false)
+                          resetConfirmation()
                         }}
                         className={`rounded-xl border-2 p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-md ${
                           selected
@@ -317,7 +403,6 @@ function SubscriptionContent() {
                 </div>
               </section>
 
-              {/* Product variants */}
               {product.variants && (
                 <section className="subscribe-section rounded-2xl border border-gray-200 bg-white p-6">
                   <h2 className="text-lg font-bold text-[#142B50]">
@@ -341,9 +426,10 @@ function SubscriptionContent() {
                     value={variantPreference}
                     onChange={(event) => {
                       setVariantPreference(event.target.value)
-                      setConfirmed(false)
+                      resetConfirmation()
                     }}
                     placeholder="Enter your preference"
+                    maxLength={200}
                     className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-3 outline-none transition-all duration-300 focus:border-[#315B91] focus:ring-2 focus:ring-blue-100"
                   />
 
@@ -353,7 +439,6 @@ function SubscriptionContent() {
                 </section>
               )}
 
-              {/* Add-ons */}
               <section className="subscribe-section rounded-2xl border border-gray-200 bg-white p-6">
                 <div className="flex items-center justify-between gap-3">
                   <h2 className="text-lg font-bold text-[#142B50]">
@@ -420,7 +505,6 @@ function SubscriptionContent() {
               </section>
             </div>
 
-            {/* Order summary */}
             <aside className="subscribe-summary h-fit rounded-2xl border border-gray-200 bg-white p-6 lg:sticky lg:top-6">
               <h2 className="text-xl font-bold text-[#142B50]">
                 Order summary
@@ -511,24 +595,49 @@ function SubscriptionContent() {
 
                 <button
                   type="button"
-                  onClick={() => setConfirmed(true)}
+                  onClick={saveCheckoutDraft}
                   className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#142B50] px-5 py-3 font-semibold text-white transition-all duration-300 hover:-translate-y-1 hover:bg-[#203d69] hover:shadow-lg active:translate-y-0"
                 >
-                  <CreditCard size={18} />
-                  Confirm selection
+                  <Save size={18} />
+                  Save checkout draft
                 </button>
 
-                {confirmed && (
-                  <div className="animate-fade-up rounded-lg border border-green-200 bg-green-50 p-4">
-                    <p className="font-semibold text-green-800">
-                      Selection ready!
+                {saveMessage && (
+                  <div
+                    role="status"
+                    className={`animate-fade-up rounded-lg border p-4 ${
+                      confirmed
+                        ? 'border-green-200 bg-green-50'
+                        : 'border-amber-200 bg-amber-50'
+                    }`}
+                  >
+                    <p className={`font-semibold ${
+                      confirmed ? 'text-green-800' : 'text-amber-800'
+                    }`}>
+                      {confirmed ? 'Draft saved!' : 'Notice'}
                     </p>
-                    <p className="mt-1 text-sm text-green-700">
-                      Your plan and pricing have been selected. The subscription
-                      has not been saved yet; payment and backend confirmation
-                      still need to be connected.
+                    <p className={`mt-1 text-sm ${
+                      confirmed ? 'text-green-700' : 'text-amber-700'
+                    }`}>
+                      {saveMessage}
                     </p>
+                    {confirmed && (
+                      <p className="mt-2 text-xs text-green-700">
+                        This is a local browser draft, not a database subscription or payment.
+                      </p>
+                    )}
                   </div>
+                )}
+
+                {savedDraft && (
+                  <button
+                    type="button"
+                    onClick={clearCheckoutDraft}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                  >
+                    <Trash2 size={16} />
+                    Clear saved draft
+                  </button>
                 )}
 
                 <p className="text-center text-xs text-gray-500">
