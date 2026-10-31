@@ -3,12 +3,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 import { authenticateUser } from '../actions/auth';
-import { useRouter } from 'next/navigation';
-
 
 export default function LoginPage() {
+    const router = useRouter();
+
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
@@ -39,8 +40,6 @@ export default function LoginPage() {
         return Object.keys(newErrors).length === 0;
     };
 
-    const router = useRouter();
-
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -56,12 +55,11 @@ export default function LoginPage() {
             const email = String(formData.get('email') || '').trim();
             const password = String(formData.get('password') || '');
 
-            // Preserve your existing client-side validation
             if (!validateForm(email, password)) {
+                setIsLoading(false);
                 return;
             }
 
-            // Use the cleaned email
             formData.set('email', email);
 
             const response = await authenticateUser(null, formData);
@@ -69,17 +67,18 @@ export default function LoginPage() {
             if (response?.success) {
                 setSuccess(true);
 
-                // Preserve the checkout destination from the URL
                 const params = new URLSearchParams(window.location.search);
                 const next = params.get('next');
 
-                // Only allow internal relative URLs
                 const redirectTo =
                     next && next.startsWith('/') && !next.startsWith('//')
                         ? next
                         : response.redirect || '/';
 
-                router.replace(redirectTo);
+                // Navigate to the destination from the top of the page.
+                window.scrollTo(0, 0);
+                router.replace(redirectTo, { scroll: true });
+                router.refresh();
             } else if (response?.errors) {
                 setErrors(response.errors);
             } else {
@@ -189,10 +188,11 @@ export default function LoginPage() {
                                 type="email"
                                 placeholder="Enter your email address"
                                 required
-                                className={`w-full px-4 py-3 rounded-lg border ${errors.email
-                                    ? 'border-[#DC2626] focus:ring-[#DC2626]'
-                                    : 'border-gray-300 focus:border-[#315B91] focus:ring-[#315B91]'
-                                    } focus:outline-none focus:ring-2 focus:ring-opacity-20 transition-colors text-[#263238]`}
+                                className={`w-full px-4 py-3 rounded-lg border ${
+                                    errors.email
+                                        ? 'border-[#DC2626] focus:ring-[#DC2626]'
+                                        : 'border-gray-300 focus:border-[#315B91] focus:ring-[#315B91]'
+                                } focus:outline-none focus:ring-2 focus:ring-opacity-20 transition-colors text-[#263238]`}
                             />
 
                             {errors.email && (
@@ -214,10 +214,11 @@ export default function LoginPage() {
                                     type={showPassword ? 'text' : 'password'}
                                     placeholder="Enter your password"
                                     required
-                                    className={`w-full px-4 py-3 rounded-lg border ${errors.password
-                                        ? 'border-[#DC2626] focus:ring-[#DC2626]'
-                                        : 'border-gray-300 focus:border-[#315B91] focus:ring-[#315B91]'
-                                        } focus:outline-none focus:ring-2 focus:ring-opacity-20 transition-colors text-[#263238] pr-12`}
+                                    className={`w-full px-4 py-3 rounded-lg border ${
+                                        errors.password
+                                            ? 'border-[#DC2626] focus:ring-[#DC2626]'
+                                            : 'border-gray-300 focus:border-[#315B91] focus:ring-[#315B91]'
+                                    } focus:outline-none focus:ring-2 focus:ring-opacity-20 transition-colors text-[#263238] pr-12`}
                                 />
 
                                 <button
