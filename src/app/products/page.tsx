@@ -45,16 +45,11 @@ export default async function ProductsPage() {
       prisma.product.findMany({
         where: { isActive: true },
         include: {
-          planProducts: {
-            include: {
-              plan: true,
-            },
-          },
           variants: {
-            where: { isActive: true },
-          },
+            where: { isActive: true }
+          }
         },
-        orderBy: { createdAt: 'asc' },
+        orderBy: { createdAt: 'asc' }
       }),
 
       prisma.plan.findMany({
