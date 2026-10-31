@@ -31,37 +31,33 @@ export async function authenticateUser(prevState, formData) {
             };
         }
 
-        // --- DATABASE AUTHENTICATION (Activate once MySQL/Prisma is configured) ---
-        /*
+
         // 2. Check if email exists
         const user = await prisma.user.findUnique({
-          where: { email: validatedFields.data.email }
+            where: { email: validatedFields.data.email }
         });
-    
+
         // 3. Generic invalid credentials message if user doesn't exist
         if (!user) {
-          return { success: false, message: "Invalid email or password." };
+            return { success: false, message: "Invalid email or password." };
         }
-    
+
         // 4 & 5. Compare password hash and return generic error if incorrect
         const passwordMatch = await bcrypt.compare(validatedFields.data.password, user.passwordHash);
         if (!passwordMatch) {
-          return { success: false, message: "Invalid email or password." };
+            return { success: false, message: "Invalid email or password." };
         }
-    
+
         // 6. Create secure session (Implementation depends on your chosen session library, e.g., iron-session or jose)
-        // await createSession(user.id, rememberMe);
-    
+        await createSession(user.id, rememberMe);
+
+
         // 7. Role-based redirect path evaluation
         let redirectPath = '/customer/dashboard';
         if (user.role === 'ADMIN') redirectPath = '/admin/dashboard';
         else if (user.role === 'STAFF') redirectPath = '/staff/dashboard';
-    
-        return { success: true, redirect: redirectPath };
-        */
 
-        // Temporary success response for UI testing
-        return { success: true, redirect: '/dashboard-placeholder' };
+        return { success: true, redirect: redirectPath };
 
     } catch (error) {
         return { success: false, message: "An unexpected error occurred. Please try again." };

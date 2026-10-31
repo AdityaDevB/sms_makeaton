@@ -16,11 +16,24 @@ enum Role {
 }
 
 model User {
-  id           String   @id @default(uuid())
+  id           String               @id @default(uuid())
   name         String
-  email        String   @unique
+  email        String               @unique
   passwordHash String
-  role         Role     @default(CUSTOMER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  role         Role                 @default(CUSTOMER)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  resetTokens  PasswordResetToken[] // Added relationship
 }
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique // Stores the HASHED token, never plain-text
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
